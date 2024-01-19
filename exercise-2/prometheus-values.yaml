@@ -1,0 +1,40 @@
+alertmanager:
+  enabled: false
+configmapReload:
+  prometheus:
+    enabled: false
+kube-state-metrics:
+  enabled: false
+prometheus-node-exporter:
+  enabled: false
+prometheus-pushgateway:
+  enabled: false
+
+server:
+  extraFlags:
+    - "enable-feature=otlp-write-receiver"
+  global:
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    evaluation_interval: 30s
+  persistentVolume:
+    enabled: false
+  service:
+    servicePort: 9090
+  resources:
+    limits:
+      memory: 300Mi
+  storage:
+    tsdb:
+      # A 10min time window is enough because it can easily absorb retries and network delays.
+      out_of_order_time_window: 10m
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: "otel-collector"
+        honor_labels: true
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              own_namespace: true
