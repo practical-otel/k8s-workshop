@@ -1,0 +1,19 @@
+mode: daemonset
+image:
+  tag: "0.92.0"
+config:
+  exporters:
+    otlphttp/prometheus:
+      endpoint: 'http://prometheus-server:9090/api/v1/otlp'
+      tls:
+        insecure: true
+    debug:
+      verbosity: detailed
+  service:
+    pipelines:
+      metrics:
+        exporters: [otlphttp/prometheus]
+      logs:
+        exporters: [debug]
+      traces:
+        exporters: [debug]
