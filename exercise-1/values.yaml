@@ -1,0 +1,15 @@
+mode: daemonset
+image:
+  tag: "0.92.0"
+config:
+  exporters:
+    debug:
+      verbosity: detailed
+  service:
+    pipelines:
+      metrics:
+        exporters: [debug]
+      logs:
+        exporters: [debug]
+      traces:
+        exporters: [debug]
