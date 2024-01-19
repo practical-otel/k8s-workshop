@@ -23,10 +23,12 @@ Get the collector pods pods
 kubectl get pods
 ```
 
+Get the logs
+```shell
+kubectl logs <pod name>
+```
 
-
-
-
+You should see logs for metrics from the collector itself.
 
 ## Links
 
