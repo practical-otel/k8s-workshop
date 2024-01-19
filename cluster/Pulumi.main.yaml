@@ -1,0 +1,5 @@
+config:
+  workshop-cluster:dnsResourceGroup: practical-otel
+  workshop-cluster:dnsZoneName: workshops.onlyspans.com
+  workshop-cluster:location: uksouth
+  azure-native:location: uksouth
