@@ -32,32 +32,22 @@ public class AKSCluster : ComponentResource
             Location = location
         });
         // Generate an SSH key
-        var sshKey = new PrivateKey("ssh-key", new PrivateKeyArgs
+        var sshKey = new PrivateKey($"{name}-ssh-key", new PrivateKeyArgs
         {
             Algorithm = "RSA",
             RsaBits = 4096
         });
 
-        var addonProfiles = new InputMap<ManagedClusterAddonProfileArgs>();
-        if (args.CreateApplicationGateway)
-            addonProfiles.Add("IngressApplicationGateway", new ManagedClusterAddonProfileArgs {
-                Enabled = true,
-                Config = {
-                    ["subnetCIDR"] = "10.225.0.0/16"
-                }
-            });
-
         var cluster = new ManagedCluster(name, new ManagedClusterArgs
         {
             ResourceGroupName = resourceGroup.Name,
-            NodeResourceGroup = resourceGroup.Name.Apply(rg => $"{rg}-nodes"),
-            AddonProfiles = addonProfiles,
+            NodeResourceGroup = resourceGroup.Name.Apply(rg => $"{name}-{rg}-nodes"),
             Location = resourceGroup.Location,
             Identity = new ManagedClusterIdentityArgs
             {
                 Type = ResourceIdentityType.SystemAssigned
             },
-            DnsPrefix = "martin",
+            DnsPrefix = name,
             EnableRBAC = true,
             KubernetesVersion = "1.28",
             LinuxProfile = new ContainerServiceLinuxProfileArgs
@@ -97,7 +87,8 @@ public class AKSCluster : ComponentResource
             }
         });
 
-        var agentPool = new AgentPool("agents", new AgentPoolArgs {
+        var agentPool = new AgentPool($"{name}agents", new AgentPoolArgs {
+            AgentPoolName = "userpool",
             ResourceGroupName = resourceGroup.Name,
             Count = 1,
             MaxPods = 110,
@@ -111,7 +102,7 @@ public class AKSCluster : ComponentResource
             ReplaceOnChanges = { "vmSize" },
             DeleteBeforeReplace = true });
 
-        var roleAssignment = new RoleAssignment("cluster-dns-contributor", new()
+        var roleAssignment = new RoleAssignment($"{name}-cluster-dns-contributor", new()
         {
             PrincipalId = cluster.IngressProfile.Apply(ip => ip?.WebAppRouting!.Identity.ObjectId!),
             PrincipalType = PrincipalType.ServicePrincipal,
@@ -119,27 +110,8 @@ public class AKSCluster : ComponentResource
             Scope = args.DnsZoneId
         });
 
-        // Export the KubeConfig
-        this.KubeConfig = ListManagedClusterUserCredentials.Invoke(
-            new ListManagedClusterUserCredentialsInvokeArgs
-            {
-                ResourceGroupName = resourceGroup.Name,
-                ResourceName = cluster.Name
-            })
-            .Apply(x => x.Kubeconfigs[0].Value)
-            .Apply(Convert.FromBase64String)
-            .Apply(Encoding.UTF8.GetString);
-
-        this.Provider = new K8s.Provider("k8s-provider", new K8s.ProviderArgs
-        {
-            KubeConfig = KubeConfig,
-            EnableServerSideApply = true
-        });
-
         this.ClusterName = cluster.Name;
         this.ClusterResourceGroup = resourceGroup.Name;
-        if (args.CreateApplicationGateway)
-            this.GatewayIp = cluster.AddonProfiles.GetApplicationGatewayIp();
     }
 
     [Output("clusterName")]
@@ -148,53 +120,9 @@ public class AKSCluster : ComponentResource
     [Output("clusterResourceGroup")]
     public Output<string> ClusterResourceGroup { get; set; }
 
-    [Output("kubeconfig")]
-    public Output<string> KubeConfig { get; set; }
-
-    [Output("GatewayIp")]
-    public Output<string?> GatewayIp { get; set; } = null!;
-
-    public K8s.Provider Provider { get; set; }
-
 }
 
 public class AKSClusterArgs : Pulumi.ResourceArgs
 {
-    public bool CreateApplicationGateway { get; set; } = false;
     public Input<string> DnsZoneId { get; set; } = null!;
-}
-
-internal static class ExtensionForCluster
-{
-    public static Output<string?> GetApplicationGatewayIp(this Output<ImmutableDictionary<string, ManagedClusterAddonProfileResponse>?> addonProfiles)
-    {
-        return addonProfiles.Apply(a =>
-        {
-            var appGatewayResourceId = new Azure.Core.ResourceIdentifier(
-                a!["IngressApplicationGateway"]!
-                    .Config!["effectiveApplicationGatewayId"]);
-
-            var appGatewayDetails = GetApplicationGateway.Invoke(new GetApplicationGatewayInvokeArgs
-            {
-                ApplicationGatewayName = appGatewayResourceId.Name,
-                ResourceGroupName = appGatewayResourceId.ResourceGroupName!
-            });
-            return appGatewayDetails.Apply<string?>(a =>
-            {
-                var publicIpId = a?.FrontendIPConfigurations.First()?
-                    .PublicIPAddress?.Id;
-                if (publicIpId == null)
-                    return "";
-
-                var publicIpResourceId = new ResourceIdentifier(publicIpId);
-                var publicIp = GetPublicIPAddress.Invoke(new GetPublicIPAddressInvokeArgs
-                {
-                    PublicIpAddressName = publicIpResourceId.Name,
-                    ResourceGroupName = publicIpResourceId.ResourceGroupName!
-                });
-                return publicIp.Apply(a => a.IpAddress);
-            });
-        });
-    }
-
 }

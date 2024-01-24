@@ -2,7 +2,7 @@
 
 Create the collectors
 ```shell
-helm install my-opentelemetry-collector open-telemetry/opentelemetry-collector --values ./values.yaml
+helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values ./values.yaml
 ```
 
 Get the collector pods pods

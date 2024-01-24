@@ -2,6 +2,10 @@
 
 In this exercise, you'll deploy a collector that will do nothing other than output it's own metrics.
 
+```shell
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+```
+
 Create a namespace
 ```shell
 kubectl create namespace otel

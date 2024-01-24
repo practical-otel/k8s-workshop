@@ -1,0 +1,74 @@
+mode: daemonset
+nameOverride: collector
+presets:
+  kubeletMetrics:
+    enabled: true
+  kubernetesAttributes:
+    enabled: true
+    extractAllPodLabels: true
+    extractAllPodAnnotations: true
+image:
+  tag: "0.86.0"
+config:
+  receivers:
+    jaeger: null
+    zipkin: null
+    kubeletstats:
+      collection_interval: 30s
+      metric_groups:
+        - node
+        - pod
+    otlp:
+      protocols:
+        grpc:
+        http:
+          cors:
+            allowed_origins:
+              - http://*
+              - https://*
+          endpoint: 0.0.0.0:4318
+  exporters:
+    otlp/refinery:
+      endpoint: ${REFINERY_ADDRESS}:4317
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY}
+      tls:
+        insecure: true
+
+    otlp/metrics:
+      endpoint: api.honeycomb.io:443
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY}
+        x-honeycomb-dataset: service-metrics
+
+    otlp/logging:
+      endpoint: api.honeycomb.io:443
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY}
+        x-honeycomb-dataset: service-logs
+
+    otlp/traces-eu:
+      endpoint: api.eu1.honeycomb.io:443
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY_EU}
+
+    otlp/metrics-eu:
+      endpoint: api.eu1.honeycomb.io:443
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY_EU}
+        x-honeycomb-dataset: service-metrics
+
+    otlp/logging-eu:
+      endpoint: api.eu1.honeycomb.io:443
+      headers:
+        x-honeycomb-team: ${HONEYCOMB_API_KEY_EU}
+        x-honeycomb-dataset: service-logs
+
+  service:
+    pipelines:
+      metrics:
+        exporters: [otlp/metrics, otlp/metrics-eu]
+      logs:
+        exporters: [otlp/logging, otlp/logging-eu]
+      traces:
+        exporters: [otlp/refinery, otlp/traces-eu]
