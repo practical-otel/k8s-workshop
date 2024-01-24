@@ -1,0 +1,40 @@
+mode: daemonset
+config:
+  extensions:
+    basicauth/client:
+      client_auth:
+        username: admin
+        password: admin
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  exporters:
+    otlphttp/prometheus:
+      endpoint: 'http://prometheus-server.otel:9090/api/v1/otlp'
+      tls:
+        insecure: true
+    opensearch:
+      http:
+        endpoint: http://opensearch-cluster-master.otel:9200
+        tls:
+          insecure: true
+        auth:
+          authenticator: basicauth/client
+    debug:
+      verbosity: detailed
+  service:
+    extensions: [basicauth/client, health_check]
+    telemetry:
+      logs:
+        level: DEBUG
+    pipelines:
+      metrics:
+        exporters: [otlphttp/prometheus]
+      logs:
+        exporters: [opensearch,debug]
+      traces:
+        exporters: [debug]

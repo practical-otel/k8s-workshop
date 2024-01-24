@@ -1,4 +1,4 @@
-# Install OpenSearch
+# Install OpenSearch and push the logs pipeline to it
 
 ```shell
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/

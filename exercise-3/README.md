@@ -1,4 +1,4 @@
-# 
+# Install Prometheus and push the collector metrics to it
 
 Create the collectors
 ```shell
