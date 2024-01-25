@@ -18,10 +18,10 @@ config:
       tls:
         insecure: true
     opensearch:
+      dataset: logs
+      namespace: workshop
       http:
         endpoint: http://opensearch-cluster-master.otel:9200
-        tls:
-          insecure: true
         auth:
           authenticator: basicauth/client
     debug:
@@ -32,8 +32,8 @@ config:
       logs:
         level: DEBUG
     pipelines:
-      metrics:
-        exporters: [otlphttp/prometheus]
+      # metrics:
+      #   exporters: [otlphttp/prometheus]
       logs:
         exporters: [opensearch,debug]
       traces:
