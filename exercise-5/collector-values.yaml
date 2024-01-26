@@ -11,6 +11,10 @@ config:
         username: admin
         password: admin
   receivers:
+    filelog:
+      exclude:
+        - /var/log/pods/*opensearch*/*/*.log
+        - /var/log/pods/*opentelemetry-collector*/*/*.log
     otlp:
       protocols:
         grpc:
