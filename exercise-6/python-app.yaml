@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-app-deployment
+  labels:
+    app: python-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-app
+  template:
+    metadata:
+      labels:
+        app: python-app
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "otel-autoinstrumentation"
+    spec:
+      containers:
+      - name: python-app
+        image: ghcr.io/practical-otel/python-app-for-k8s-workshop:nightly
+        ports:
+        - containerPort: 5000
