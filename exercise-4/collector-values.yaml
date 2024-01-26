@@ -32,8 +32,8 @@ config:
       logs:
         level: DEBUG
     pipelines:
-      # metrics:
-      #   exporters: [otlphttp/prometheus]
+      metrics:
+        exporters: [otlphttp/prometheus]
       logs:
         exporters: [opensearch,debug]
       traces:
