@@ -14,10 +14,6 @@ spec:
     argument: "1"
   python:
     env:
-      - name: OTEL_TRACES_EXPORTER
-        value: otlp,console,otlp_proto_http
-      # - name: OTEL_METRICS_EXPORTER
-      #   value: otlp,console
       - name: OTEL_NODE_IP
         valueFrom:
           fieldRef:
@@ -26,13 +22,17 @@ spec:
         value: http://$(OTEL_NODE_IP):4318
       - name: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
         value: http/protobuf
-      # - name: OTEL_LOGS_EXPORTER
-      #   value: otlp_proto_http
-      # - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
-      #   value: 'true'
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp_proto_http
+      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        value: 'true'
 
   dotnet:
     env:
+      - name: OTEL_NODE_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
         value: http://$(OTEL_NODE_IP):4318
 

@@ -18,6 +18,6 @@ spec:
     spec:
       containers:
       - name: python-app
-        image: ghcr.io/practical-otel/python-app-for-k8s-workshop:nightly
+        image: ghcr.io/practical-otel/python-app-for-k8s-workshop:latest
         ports:
         - containerPort: 5000
