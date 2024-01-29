@@ -13,7 +13,7 @@ helm install os-dashboards opensearch/opensearch-dashboards --values opensearch-
 ```
 
 ```shell
-helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values ./values.yaml
+helm upgrade my-opentelemetry-collector open-telemetry/opentelemetry-collector --values ./collector-values.yaml
 ```
 
 Forward port 5601 from the dashboards container, and open up http://localhost:5601

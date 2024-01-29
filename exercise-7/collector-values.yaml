@@ -1,0 +1,55 @@
+mode: daemonset
+
+presets:
+  kubernetesAttributes:
+    enabled: true
+  kubeletMetrics:
+    enabled: true
+
+config:
+  extensions:
+    basicauth/client:
+      client_auth:
+        username: admin
+        password: admin
+  receivers:
+    filelog:
+      exclude:
+        - /var/log/pods/*opensearch*/*/*.log
+        - /var/log/pods/*opentelemetry-collector*/*/*.log
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+  exporters:
+    otlp/jaeger:
+      endpoint: 'jaeger-collector.otel:4317'
+      tls:
+        insecure: true
+    otlphttp/prometheus:
+      endpoint: 'http://prometheus-server.otel:9090/api/v1/otlp'
+      tls:
+        insecure: true
+    opensearch:
+      dataset: logs
+      namespace: workshop
+      http:
+        endpoint: http://opensearch-cluster-master.otel:9200
+        auth:
+          authenticator: basicauth/client
+    debug:
+      verbosity: detailed
+  service:
+    extensions: [basicauth/client, health_check]
+    telemetry:
+      logs:
+        level: DEBUG
+    pipelines:
+      metrics:
+        exporters: [otlphttp/prometheus]
+      logs:
+        exporters: [opensearch]
+      traces:
+        exporters: [otlp/jaeger,debug]
