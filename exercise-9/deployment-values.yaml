@@ -1,0 +1,13 @@
+mode: deployment
+
+config:
+  exporters:
+    otlp/jaeger:
+      endpoint: 'jaeger-collector.otel:4317'
+      tls:
+        insecure: true
+
+  service:
+    pipelines:
+      traces:
+        exporters: [otlp/jaeger]
